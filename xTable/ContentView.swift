@@ -7,6 +7,14 @@
 
 import SwiftUI
 
+struct generalTextStyle: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .foregroundColor(.white)
+            .fontWeight(.bold)
+    }
+}
+
 struct ContentView: View {
     @State private var gameActive = false
     @State private var animals = ["bear", "buffalo", "chick", "chicken", "cow", "crocodile", "dog", "duck", "elephant", "frog", "giraffe", "goat", "gorilla", "hippo", "horse", "narwhal", "owl", "panda", "parrot", "pig", "rabbit", "rhino", "sloth", "snake", "walrus", "whale", "zebra"].shuffled()
@@ -18,9 +26,8 @@ struct ContentView: View {
     @State private var finalRound = false
     @State private var score = 0
     
+    @State private var multipliers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].shuffled()
     @State private var multiplier = 0
-    @State private var multiplierIndex = Int.random(in: 0...11)
-    @State private var multiplierArray = [Int]()
     @State private var correctAnswer = 0
     @State private var choices = [0, 1, 2, 3]
     
@@ -71,23 +78,19 @@ struct ContentView: View {
 
                 }
             }
-            .foregroundColor(.white)
-            .fontWeight(.bold)
+            .textStyle()
             
             //HOME VIEW
             if gameActive == false {
                 VStack {
                     Stepper("xTable: \(numSelected)", value: $numSelected, in: 2...12)
-                        .foregroundColor(.white)
-                        .font(.title)
-                        .fontWeight(.bold)
                     
                     Stepper("Rounds: \(roundsSelected)", value: $roundsSelected, in: 3...12, step: 3)
-                        .foregroundColor(.white)
-                        .font(.title)
-                        .fontWeight(.bold)
+                        
                     
                 }
+                .textStyle()
+                .font(.title)
                 .padding(.horizontal, 50)
                 .frame(width: 375, height: 150)
                 .background(Color("Orange"))
@@ -101,6 +104,7 @@ struct ContentView: View {
                         
                         ForEach(0..<4) { index in
                             Button {
+                                generateMultiplier()
                                 answerCorrect(answer: choices[index])
                                 generateAnswers()
                                 
@@ -110,9 +114,8 @@ struct ContentView: View {
                                 
                             } label: {
                                 Label("\(choices[index])", image: animals[index])
-                                    .foregroundColor(.white)
+                                    .textStyle()
                                     .font(.system(size: 50))
-                                    .fontWeight(.bold)
                             }
                         }
                         
@@ -125,65 +128,81 @@ struct ContentView: View {
             }
             
         }
-        .alert("Final Round", isPresented: $finalRound) {
+        .alert("Game Over!", isPresented: $finalRound) {
             Button("New Game", action: newGame)
         } message: {
-            Text("Score: \(score)/\(rounds) rounds")
+            Text("\(score) points/\(rounds) rounds")
         }
+    }
+    
+    func generateMultiplier() {
+        multiplier = multipliers[0]
+        
+        multipliers.removeFirst()
+        
+        print(multiplier)
     }
     
     func generateAnswers() {
-        var answers = [Int]()
-        
-        
-        for _ in 0...2 {
-            
-            if numSelected == 2  {
-                answers.append(Int.random(in: 0...24))
-            } else if numSelected == 3 {
-                answers.append(Int.random(in: 0...36))
-            } else if numSelected == 4 {
-                answers.append(Int.random(in: 0...48))
-            } else if numSelected == 5 {
-                answers.append(Int.random(in: 0...60))
-            } else if numSelected == 6 {
-                answers.append(Int.random(in: 0...72))
-            } else if numSelected == 7 {
-                answers.append(Int.random(in: 0...84))
-            } else if numSelected == 8 {
-                answers.append(Int.random(in: 0...96))
-            } else if numSelected == 9 {
-                answers.append(Int.random(in: 0...108))
-            } else if numSelected == 10 {
-                answers.append(Int.random(in: 0...120))
-            } else if numSelected == 11 {
-                answers.append(Int.random(in: 0...132))
-            } else {
-                answers.append(Int.random(in: 0...144))
-            }
-            
-        }
-        
-        multiplier = Int.random(in: 0...12)
-        
         correctAnswer = numSelected * multiplier
         
-        answers.append(correctAnswer)
+        var answers: Set<Int> = [correctAnswer]
+        
+        for _ in 0...2 {
+            var generatedNumber = generateNumber()
+            while isDuplicate(set: answers, generatedNumber: generatedNumber) {
+                generatedNumber = generateNumber()
+            }
+            
+            answers.insert(generatedNumber)
+        }
         
         choices = answers.shuffled()
-        
-        print(choices)
-        
+    }
+    
+    func isDuplicate(set: Set<Int>, generatedNumber: Int) -> Bool {
+        return set.contains(generatedNumber)
+    }
+    
+    func generateNumber() -> Int {
+        let newNumber: Int
+            
+            if numSelected == 2  {
+                newNumber = Int.random(in: 0...24)
+            } else if numSelected == 3 {
+                newNumber = Int.random(in: 0...36)
+            } else if numSelected == 4 {
+                newNumber = Int.random(in: 0...48)
+            } else if numSelected == 5 {
+                newNumber = Int.random(in: 0...60)
+            } else if numSelected == 6 {
+                newNumber = Int.random(in: 0...72)
+            } else if numSelected == 7 {
+                newNumber = Int.random(in: 0...84)
+            } else if numSelected == 8 {
+                newNumber = Int.random(in: 0...96)
+            } else if numSelected == 9 {
+                newNumber = Int.random(in: 0...108)
+            } else if numSelected == 10 {
+                newNumber = Int.random(in: 0...120)
+            } else if numSelected == 11 {
+                newNumber = Int.random(in: 0...132)
+            } else {
+                newNumber = Int.random(in: 0...144)
+            }
+            
+        return newNumber
+
     }
     
     func answerCorrect(answer: Int) {
-        
         if answer == correctAnswer {
             score += 1
-
+            
         }
         
         rounds += 1
+        animals.shuffle()
     }
     
     func readyRestartTapped() {
@@ -192,10 +211,18 @@ struct ContentView: View {
             rounds = 0
             numSelected = 2
             roundsSelected = 3
+            
+            multipliers.removeAll()
+            multipliers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].shuffled()
+        }
+        
+        if gameActive == true {
+            generateMultiplier()
         }
     }
     
     func newGame() {
+        multipliers = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].shuffled()
         score = 0
         rounds = 0
         finalRound = false
@@ -203,6 +230,12 @@ struct ContentView: View {
         rotation += 360
     }
     
+}
+
+extension View {
+    func textStyle() -> some View {
+        modifier(generalTextStyle())
+    }
 }
 
 struct ContentView_Previews: PreviewProvider {
